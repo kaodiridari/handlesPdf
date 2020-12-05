@@ -31,8 +31,7 @@ namespace Snipping_OCR
         public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, bool searchAuto)
         {
             if (searchAuto)
-            {
-               
+            {               
                 return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber);
             } else
             {

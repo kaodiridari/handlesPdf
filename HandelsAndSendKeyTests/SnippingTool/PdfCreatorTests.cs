@@ -29,10 +29,13 @@ namespace WindowsFormsApplication2.SnippingTool.Tests
         [TestMethod()]
         public void HalloTest2()
         {
-            const string filename =
-                @"C:\Users\user\Documents\bücher\dune\dune.pdf";
+            //"where the pdf should be";
+            const string filename = 
+                @"C:\Users\user\Documents\result.pdf";
             int numberOfPages = 627;
-            string template = @"C:\Users\user\Documents\bücher\dune\csharp{0}.png";
+            //"where the screenshots are";
+            string template = 
+                @"C:\Users\user\Documents\screenshots\screenshot{0}.png";
 
             PdfCreator.hallo(155, 235, filename, template, numberOfPages, false);
         }

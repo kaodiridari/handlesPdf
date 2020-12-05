@@ -21,7 +21,7 @@ namespace SimulateKeyPress
         Rectangle _rectScaled;
         Rectangle _rectUnscaled;
         private Button doItButton;
-        const string filePath = @"C:\Users\user\dreck\";
+        const string filePath = @"C:\Users\user\temp\";
         private Label label1;
         private TextBox textBox2;
         private Color pagesTextBoxBackColor;

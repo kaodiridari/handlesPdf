@@ -28,24 +28,24 @@ public partial class WindowsForm : Form
     /// 
     private void populateWindowsGridListView(List<MainWindows.MainWindow> mws)
     {
-        Console.WriteLine("populateWindowsGridListView " + mws.Count);
-        dataSet1.Clear();
-        foreach (MainWindows.MainWindow amw in mws)
-        {   
-            WindowsFormsApplication2.DataSet1.MainWindowDataRow newRow = dataSet1.MainWindowData.NewMainWindowDataRow();
-            newRow.handle = amw.hWnd;
-            newRow.title = amw.title;
-            if (amw.ic != null)
-            {
-                newRow.icon = amw.ic.ToBitmap();
-            }
-            else
-            {                
-                Bitmap im = (Bitmap)global::WindowsFormsApplication2.Properties.Resources.ResourceManager.GetObject("qm");
-                newRow.icon = im;
-            }
-            dataSet1.MainWindowData.Rows.Add(newRow);
-        }
+        //Console.WriteLine("populateWindowsGridListView " + mws.Count);
+        //dataSet1.Clear();
+        //foreach (MainWindows.MainWindow amw in mws)
+        //{   
+        //  //  WindowsFormsApplication2.DataSet1.MainWindowDataRow newRow = dataSet1.MainWindowData.NewMainWindowDataRow();
+        //    newRow.handle = amw.hWnd;
+        //    newRow.title = amw.title;
+        //    if (amw.ic != null)
+        //    {
+        //        newRow.icon = amw.ic.ToBitmap();
+        //    }
+        //    else
+        //    {                
+        //        Bitmap im = (Bitmap)global::WindowsFormsApplication2.Properties.Resources.ResourceManager.GetObject("qm");
+        //        newRow.icon = im;
+        //    }
+        //    dataSet1.MainWindowData.Rows.Add(newRow);
+        //}
         //dataSet1.AcceptChanges();
     }
 

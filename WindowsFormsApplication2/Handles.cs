@@ -7,6 +7,8 @@ using Snipping_OCR;
 using System.Drawing.Imaging;
 using System.Collections.Generic;
 using System.Text;
+using System.IO;
+using System.Linq;
 
 namespace SimulateKeyPress
 {
@@ -22,6 +24,8 @@ namespace SimulateKeyPress
         Rectangle _rectUnscaled;
         private Button doItButton;
         const string filePath = @"C:\Users\user\temp\";
+        private const int SecondsTimeout = 60;
+        private const int MillisecondsSleep = 250;
         private Label label1;
         private TextBox textBox2;
         private Color pagesTextBoxBackColor;
@@ -343,6 +347,12 @@ namespace SimulateKeyPress
         private void doItButton_Click(object sender, EventArgs e)
         {
             Console.WriteLine("doItButton_Click");
+
+            string tempPath = System.IO.Path.GetTempPath();
+            string captureDir = System.IO.Path.Combine(tempPath, "capture"); //captureDir = "C:\\Users\\user\\AppData\\Local\\Temp\\capture"
+            System.IO.Directory.CreateDirectory(captureDir);
+
+            // Create a file name for the file you want to create.   
             string text = textBox2.Text;
             int numberOfShots;
             if(!int.TryParse(text, out numberOfShots))
@@ -352,8 +362,13 @@ namespace SimulateKeyPress
             Hide();
             Thread.Sleep(1000); //weil das fenster langsam ausgeblendet wird
             StringBuilder sb = new StringBuilder();
+            long lastFilesSize = -1;
+            string lastFilesName = "";
+            double now = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
+            long timeForATry = 0;
             for (int i = 0; i < numberOfShots; i++)
             {
+                doitagain:
                 if (myHandle == IntPtr.Zero)
                 {
                     MessageBox.Show("Target is not running.");
@@ -364,21 +379,56 @@ namespace SimulateKeyPress
                 Bitmap captureBitmap = new Bitmap(_rectScaled.Width, _rectScaled.Height, PixelFormat.Format32bppArgb);
                 Graphics captureGraphics = Graphics.FromImage(captureBitmap);
                 captureGraphics.CopyFromScreen(_rectScaled.X, _rectScaled.Y, 0, 0, _rectScaled.Size);
-                sb.Append(filePath).Append("csharp").Append(i).Append(".png");               
-                captureBitmap.Save(sb.ToString(), ImageFormat.Png);
-                sb.Clear();                
+                                
+                string tempFileName = System.IO.Path.GetRandomFileName(); //tempFileName = "a4it1izv.xq5"
+                Console.WriteLine("tempFileName: " + tempFileName);
+                string tempSreenshotFile = System.IO.Path.Combine(captureDir, tempFileName);
+                Console.WriteLine("tempSreenshot: " + tempSreenshotFile);               
+                captureBitmap.Save(tempSreenshotFile, ImageFormat.Png);
+                long lengthTempScreenshot = new System.IO.FileInfo(tempSreenshotFile).Length;
+                Console.WriteLine("tempSreenshot.length: " + lengthTempScreenshot);
+                               
+                //get the file-size -> same file size for subsequent screenshots
+                //are most certainly a sign for a stuck application.                
+                if (lengthTempScreenshot == lastFilesSize)
+                {
+                    Console.WriteLine("Same filesize: " + lastFilesSize + " for index i = " + i);                    
+                    double nowagain = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
+                    if (nowagain - now > SecondsTimeout)
+                    {
+                        //TODO handle the rare possibilty of two screenshoots having the same size.
+                        throw new Exception("ups. This is a timeout");
+                    }
+                    if (AreFileContentsEqual(tempSreenshotFile, lastFilesName))
+                    {
+                        Thread.Sleep(MillisecondsSleep);
+                        goto doitagain;
+                    } else
+                    {
+                        Console.WriteLine("Same filesize but different content - isn't this really quite exceptional? " + lastFilesName + " " + tempSreenshotFile);
+                    } 
+                }                 
+                lastFilesSize = lengthTempScreenshot;
+                sb.Clear();
                 captureGraphics.Dispose();
                 captureBitmap.Dispose();
+                String realScreenshotPath = sb.Append(filePath).Append("csharp").Append(i).Append(".png").ToString();
+                if (File.Exists(realScreenshotPath))
+                {
+                    Console.WriteLine("Deleting: " + realScreenshotPath);
+                    File.Delete(realScreenshotPath);
+                }
+                File.Move(/*from*/tempSreenshotFile, /*to*/realScreenshotPath);
+                Console.WriteLine("Moved " + tempSreenshotFile + " to " + realScreenshotPath); 
+                lastFilesName = realScreenshotPath;
+                now = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
                 SendKeys.SendWait("{PGDN}");
-                Thread.Sleep(500); //sendwait wartet nicht?
+                Thread.Sleep(MillisecondsSleep);                
             }          
             Show();
         }
 
-        //private void label1_Click(object sender, EventArgs e)
-        //{
-
-        //}
+        public static bool AreFileContentsEqual(String path1, String path2) => File.ReadAllBytes(path1).SequenceEqual(File.ReadAllBytes(path2));        
 
         private void textBox2_TextChanged(object sender, EventArgs e)
         {

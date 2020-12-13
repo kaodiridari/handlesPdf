@@ -38,12 +38,12 @@
             this.handleDataGridViewTextBoxColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.icon = new System.Windows.Forms.DataGridViewImageColumn();
             this.mainWindowDataBindingSource = new System.Windows.Forms.BindingSource(this.components);
-            this.dataSet1 = new WindowsFormsApplication2.DataSet1();
+            //this.dataSet1 = new WindowsFormsApplication2.DataSet1();
             this.windowChoosenButton = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainWindowDataBindingSource)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
+            //((System.ComponentModel.ISupportInitialize)(this.dataSet1)).BeginInit();
             this.SuspendLayout();
             // 
             // dataGridView1
@@ -122,12 +122,12 @@
             // mainWindowDataBindingSource
             // 
             this.mainWindowDataBindingSource.DataMember = "MainWindowData";
-            this.mainWindowDataBindingSource.DataSource = this.dataSet1;
+            //this.mainWindowDataBindingSource.DataSource = this.dataSet1;
             // 
             // dataSet1
             // 
-            this.dataSet1.DataSetName = "DataSet1";
-            this.dataSet1.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
+            //this.dataSet1.DataSetName = "DataSet1";
+            //this.dataSet1.SchemaSerializationMode = System.Data.SchemaSerializationMode.IncludeSchema;
             // 
             // windowChoosenButton
             // 
@@ -159,17 +159,16 @@
             this.Text = "WindowsForm";
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.mainWindowDataBindingSource)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.dataSet1)).EndInit();
+            //((System.ComponentModel.ISupportInitialize)(this.dataSet1)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
-
         }
 
         #endregion
 
         private System.Windows.Forms.DataGridView dataGridView1;
         private System.Windows.Forms.BindingSource mainWindowDataBindingSource;
-        private WindowsFormsApplication2.DataSet1 dataSet1;
+        //private WindowsFormsApplication2.DataSet1 dataSet1;
     private System.Windows.Forms.Button windowChoosenButton;
     private System.Windows.Forms.TextBox textBox1;
     private System.Windows.Forms.DataGridViewTextBoxColumn titleDataGridViewTextBoxColumn;

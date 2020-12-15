@@ -5,6 +5,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.IO;
+
 
 namespace WindowsFormsApplication2.SnippingTool.Tests
 {
@@ -29,15 +31,30 @@ namespace WindowsFormsApplication2.SnippingTool.Tests
         [TestMethod()]
         public void HalloTest2()
         {
-            //"where the pdf should be";
-            const string filename = 
-                @"C:\Users\user\Documents\result.pdf";
-            int numberOfPages = 627;
-            //"where the screenshots are";
-            string template = 
-                @"C:\Users\user\Documents\screenshots\screenshot{0}.png";
+            const string dir = @"C:\Users\user\Documents\screenshoots\kjkjhjkh\26";
 
-            PdfCreator.hallo(155, 235, filename, template, numberOfPages, false);
+            //A4 210 mm x 297 mm
+            const double pageWidthMM = 210.0;
+            //const double r = 210.0 / 297.0;
+
+            //"where the pdf should be";
+            string filename = Path.Combine(dir, "allinone.pdf");
+            
+            //only screenshots in folder
+            int numberOfPages = Directory.EnumerateFiles(dir).Count(); 
+            
+            //"where the screenshots are";
+            string template = Path.Combine(dir, "csharp{0}.png"); 
+
+            //get the common size: first picture -> size of all
+            string firstPageDir = template.Replace("{0}", "1");
+            System.Drawing.Image img = System.Drawing.Image.FromFile(firstPageDir);
+            int w = img.Width;
+            int h = img.Height;
+            double rimg = (double)w / (double)h;
+            Console.WriteLine("image: " + firstPageDir + "w: " + w + " h: " + h + " r: " + rimg);
+
+            PdfCreator.hallo(pageWidthMM, pageWidthMM / rimg, filename, template, numberOfPages, false);
         }
     }
 }

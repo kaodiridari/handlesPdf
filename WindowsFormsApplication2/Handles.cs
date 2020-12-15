@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.IO;
 using System.Linq;
+using WindowsFormsApplication2.SnippingTool;
 
 namespace SimulateKeyPress
 {
@@ -23,14 +24,18 @@ namespace SimulateKeyPress
         Rectangle _rectScaled;
         Rectangle _rectUnscaled;
         private Button doItButton;
-        const string filePath = @"C:\Users\user\temp\";
+        //const string filePath = @"C:\Users\user\temp\";
         private const int SecondsTimeout = 60;
         private const int MillisecondsSleep = 250;
         private Label label1;
-        private TextBox textBox2;
+        private TextBox numberOfPages;
         private Color pagesTextBoxBackColor;
         private ChooseAreaTool[] _formsForScreens;
         private Button findPageButton;
+        private CheckBox checkBoxPdf;
+        private CheckBox checkBoxKeep;
+        private TextBox pathOfShoots;
+        private Label label2;
         private IntPtr myHandle;
 
         [STAThread]
@@ -44,7 +49,7 @@ namespace SimulateKeyPress
         {
             //ChooseAreaTool.AreaSelected += OnAreaSelected;
             InitializeComponent();
-            pagesTextBoxBackColor = textBox2.BackColor;
+            pagesTextBoxBackColor = numberOfPages.BackColor;
             doItButton.Enabled = false;
         }
 
@@ -142,8 +147,12 @@ namespace SimulateKeyPress
             this.button2 = new System.Windows.Forms.Button();
             this.doItButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
-            this.textBox2 = new System.Windows.Forms.TextBox();
+            this.numberOfPages = new System.Windows.Forms.TextBox();
             this.findPageButton = new System.Windows.Forms.Button();
+            this.checkBoxPdf = new System.Windows.Forms.CheckBox();
+            this.checkBoxKeep = new System.Windows.Forms.CheckBox();
+            this.pathOfShoots = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // button1
@@ -170,7 +179,7 @@ namespace SimulateKeyPress
             // 
             // textBox1
             // 
-            this.textBox1.Location = new System.Drawing.Point(1, 260);
+            this.textBox1.Location = new System.Drawing.Point(15, 306);
             this.textBox1.Multiline = true;
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(259, 168);
@@ -199,19 +208,20 @@ namespace SimulateKeyPress
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(14, 213);
+            this.label1.Location = new System.Drawing.Point(12, 216);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(40, 13);
             this.label1.TabIndex = 4;
             this.label1.Text = "Seiten:";
+            this.label1.Click += new System.EventHandler(this.label1_Click);
             // 
-            // textBox2
+            // numberOfPages
             // 
-            this.textBox2.Location = new System.Drawing.Point(80, 211);
-            this.textBox2.Name = "textBox2";
-            this.textBox2.Size = new System.Drawing.Size(64, 20);
-            this.textBox2.TabIndex = 5;
-            this.textBox2.TextChanged += new System.EventHandler(this.textBox2_TextChanged);
+            this.numberOfPages.Location = new System.Drawing.Point(60, 213);
+            this.numberOfPages.Name = "numberOfPages";
+            this.numberOfPages.Size = new System.Drawing.Size(64, 20);
+            this.numberOfPages.TabIndex = 5;
+            this.numberOfPages.TextChanged += new System.EventHandler(this.textBox2_TextChanged);
             // 
             // findPageButton
             // 
@@ -223,11 +233,58 @@ namespace SimulateKeyPress
             this.findPageButton.UseVisualStyleBackColor = true;
             this.findPageButton.Click += new System.EventHandler(this.findPageButton_Click);
             // 
+            // checkBoxPdf
+            // 
+            this.checkBoxPdf.AutoSize = true;
+            this.checkBoxPdf.Checked = true;
+            this.checkBoxPdf.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxPdf.Location = new System.Drawing.Point(17, 283);
+            this.checkBoxPdf.Name = "checkBoxPdf";
+            this.checkBoxPdf.Size = new System.Drawing.Size(41, 17);
+            this.checkBoxPdf.TabIndex = 7;
+            this.checkBoxPdf.Text = "pdf";
+            this.checkBoxPdf.UseVisualStyleBackColor = true;
+            this.checkBoxPdf.CheckedChanged += new System.EventHandler(this.checkBox1_CheckedChanged);
+            // 
+            // checkBoxKeep
+            // 
+            this.checkBoxKeep.AutoSize = true;
+            this.checkBoxKeep.Checked = true;
+            this.checkBoxKeep.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.checkBoxKeep.Location = new System.Drawing.Point(147, 283);
+            this.checkBoxKeep.Name = "checkBoxKeep";
+            this.checkBoxKeep.Size = new System.Drawing.Size(78, 17);
+            this.checkBoxKeep.TabIndex = 8;
+            this.checkBoxKeep.Text = "keep shots";
+            this.checkBoxKeep.UseVisualStyleBackColor = true;
+            this.checkBoxKeep.CheckedChanged += new System.EventHandler(this.checkBoxKeep_CheckedChanged);
+            // 
+            // pathOfShoots
+            // 
+            this.pathOfShoots.Location = new System.Drawing.Point(60, 243);
+            this.pathOfShoots.Name = "pathOfShoots";
+            this.pathOfShoots.Size = new System.Drawing.Size(321, 20);
+            this.pathOfShoots.TabIndex = 9;
+            this.pathOfShoots.Text = "C:\\Users\\user\\Documents\\screenshoots\\<enter subpath here>";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(12, 246);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(32, 13);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "Pfad:";
+            // 
             // HandlesForm
             // 
-            this.ClientSize = new System.Drawing.Size(282, 496);
+            this.ClientSize = new System.Drawing.Size(393, 486);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.pathOfShoots);
+            this.Controls.Add(this.checkBoxKeep);
+            this.Controls.Add(this.checkBoxPdf);
             this.Controls.Add(this.findPageButton);
-            this.Controls.Add(this.textBox2);
+            this.Controls.Add(this.numberOfPages);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.doItButton);
             this.Controls.Add(this.button2);
@@ -353,7 +410,7 @@ namespace SimulateKeyPress
             System.IO.Directory.CreateDirectory(captureDir);
 
             // Create a file name for the file you want to create.   
-            string text = textBox2.Text;
+            string text = numberOfPages.Text;
             int numberOfShots;
             if(!int.TryParse(text, out numberOfShots))
             {
@@ -365,7 +422,12 @@ namespace SimulateKeyPress
             long lastFilesSize = -1;
             string lastFilesName = "";
             double now = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
-            long timeForATry = 0;
+            string posh = pathOfShoots.Text.Trim();
+            if (!Directory.Exists(posh))
+            {
+                MessageBox.Show("Directory does not exist.");
+                return;
+            }
             for (int i = 0; i < numberOfShots; i++)
             {
                 doitagain:
@@ -412,7 +474,8 @@ namespace SimulateKeyPress
                 sb.Clear();
                 captureGraphics.Dispose();
                 captureBitmap.Dispose();
-                String realScreenshotPath = sb.Append(filePath).Append("csharp").Append(i).Append(".png").ToString();
+                string shot = sb.Append("csharp").Append(i).Append(".png").ToString();
+                String realScreenshotPath = Path.Combine(posh, shot);                
                 if (File.Exists(realScreenshotPath))
                 {
                     Console.WriteLine("Deleting: " + realScreenshotPath);
@@ -424,7 +487,44 @@ namespace SimulateKeyPress
                 now = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
                 SendKeys.SendWait("{PGDN}");
                 Thread.Sleep(MillisecondsSleep);                
-            }          
+            }  //endfor
+            if (checkBoxPdf.Checked)
+            {
+                Console.WriteLine("Creating a pdf.");
+                const double pageWidthMM = 210.0;
+                string filenamePdf = Path.Combine(posh, "allinone.pdf");
+                string template = Path.Combine(posh, "csharp{0}.png");
+                //get the common size: first picture -> size of all
+                string firstPageDir = template.Replace("{0}", "1");
+                System.Drawing.Image img = System.Drawing.Image.FromFile(firstPageDir);
+                int w = img.Width;
+                int h = img.Height;
+                img.Dispose();
+                double rimg = (double)w / (double)h;
+                Console.WriteLine("image: " + firstPageDir + " w: " + w + " h: " + h + " r: " + rimg + " numberOfShots: " + numberOfShots);
+
+                PdfCreator.hallo(pageWidthMM, pageWidthMM / rimg, filenamePdf, template, numberOfShots, false);
+                if (!checkBoxKeep.Checked)
+                {
+                    Console.WriteLine("Deleting shots.");
+                    IEnumerable<string> files = Directory.EnumerateFiles(posh);
+                    foreach (string f in files)
+                    {
+                        if (f.EndsWith(".png"))
+                        {
+                            try
+                            {
+                                File.Delete(f);
+                                Console.WriteLine("Deleted: " + f);
+                            }
+                            catch (Exception)
+                            {
+                                Console.WriteLine("Not deleted: " + f);
+                            }                            
+                        }
+                    }
+                }
+            }             
             Show();
         }
 
@@ -433,20 +533,20 @@ namespace SimulateKeyPress
         private void textBox2_TextChanged(object sender, EventArgs e)
         {
             int val;
-            if (textBox2.Text.Trim().StartsWith("0"))
+            if (numberOfPages.Text.Trim().StartsWith("0"))
             {
-                textBox2.BackColor = Color.Red;
+                numberOfPages.BackColor = Color.Red;
                 doItButton.Enabled = false;
                 return;
             }
-            int.TryParse(textBox2.Text, out val);
+            int.TryParse(numberOfPages.Text, out val);
             if (val <= 0)
             {
-                textBox2.BackColor = Color.Red;
+                numberOfPages.BackColor = Color.Red;
                 doItButton.Enabled = false;
             } else
             {
-                textBox2.BackColor = pagesTextBoxBackColor;
+                numberOfPages.BackColor = pagesTextBoxBackColor;
                 doItButton.Enabled = true;
             }
         }
@@ -454,6 +554,21 @@ namespace SimulateKeyPress
         private void HandlesForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Console.WriteLine("HandlesForm_FormClosing");
+        }
+
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void checkBoxKeep_CheckedChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void label1_Click(object sender, EventArgs e)
+        {
+
         }
 
         //private void Form1_FormClosing(object sender, FormClosingEventArgs e)

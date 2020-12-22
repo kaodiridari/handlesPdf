@@ -87,24 +87,7 @@ namespace SimulateKeyPress
 
         private void button1_Click(object sender, EventArgs e)
         {
-            System.Drawing.Point p = new Point(_targetScreenPos.X, _targetScreenPos.Y);
-            IntPtr windowAtPoint = WindowFromPoint(p);   //kind-fenster
-            IntPtr getAncestorWindowGetRoot = GetAncestor(windowAtPoint, GetAncestorFlags.GetRoot);
-            IntPtr getAncestorWindowGetRootOwner = GetAncestor(windowAtPoint, GetAncestorFlags.GetRootOwner);
-            string str = "getAncestorWindowGetRoot: " + getAncestorWindowGetRoot + "\n";
-            str += "getAncestorWindowGetRootOwner: " + getAncestorWindowGetRootOwner + "\n";
-            str += "windowAtPoint: " + windowAtPoint + "\n";
-            textBox1.Clear();
-            textBox1.AppendText(str);
-
-            myHandle = getAncestorWindowGetRoot;
-            
-            if (myHandle == IntPtr.Zero)
-            {
-                MessageBox.Show("Target is not running.");
-                return;
-            }
-
+            findTargetWindow();
             ////shift+ctrl + 1 = drehen guz
             //SetForegroundWindow(myHandle);
             //SendKeys.SendWait("+^1");
@@ -139,7 +122,36 @@ namespace SimulateKeyPress
             ////Thread.Sleep(1000);
         }
 
-        private void InitializeComponent()
+        /**
+         * Determines the window we want to have screenshots from.
+         * _targetScreenPos must contain a point within the window.
+         * Finally myHandle is the handle of the target window.
+         * This is called after the user has a 'choosing-rectangle' drawn or
+         * after the user used the moveToTargetWindowButton.
+         */
+        private void findTargetWindow()
+        {
+            System.Drawing.Point p = new Point(_targetScreenPos.X, _targetScreenPos.Y);
+            IntPtr windowAtPoint = WindowFromPoint(p);   //kind-fenster
+            IntPtr getAncestorWindowGetRoot = GetAncestor(windowAtPoint, GetAncestorFlags.GetRoot);
+            IntPtr getAncestorWindowGetRootOwner = GetAncestor(windowAtPoint, GetAncestorFlags.GetRootOwner);
+            string str = "getAncestorWindowGetRoot: " + getAncestorWindowGetRoot + "\n";
+            str += "getAncestorWindowGetRootOwner: " + getAncestorWindowGetRootOwner + "\n";
+            str += "windowAtPoint: " + windowAtPoint + "\n";
+            textBox1.Clear();
+            textBox1.AppendText(str);
+
+            myHandle = getAncestorWindowGetRoot;
+
+            if (myHandle == IntPtr.Zero)
+            {
+                MessageBox.Show("Target is not running.");
+                return;
+            }
+        }
+
+
+    private void InitializeComponent()
         {
             this.button1 = new System.Windows.Forms.Button();
             this.moveToTargetWindowButton = new System.Windows.Forms.Button();
@@ -176,6 +188,7 @@ namespace SimulateKeyPress
             this.moveToTargetWindowButton.TabIndex = 1;
             this.moveToTargetWindowButton.Text = "Move mouse to target";
             this.moveToTargetWindowButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MyOnMouseUp);
+            this.moveToTargetWindowButton.Enabled = false;
             // 
             // textBox1
             // 
@@ -377,8 +390,11 @@ namespace SimulateKeyPress
             this._rectUnscaled = rea.rectUnscaled;
             int sn = rea.screenNumber;
             textBox1.AppendText("Rectangle scaled: " + _rectScaled.ToString() + " Rectangle unscaled: " + _rectUnscaled.ToString() + " on screen: " + sn + "\n");
-
+            textBox1.AppendText(" Upper left x: " + rea.rectScaled.X.ToString() + " Upper left y: " + rea.rectScaled.Y.ToString());
             //Thread.Sleep(10000);
+
+            this._targetScreenPos.X = rea.rectUnscaled.X;
+            this._targetScreenPos.Y = rea.rectUnscaled.Y;
 
             //und die forms loswerden
             for (int i = 0; i < _formsForScreens.Length; i++)
@@ -399,6 +415,8 @@ namespace SimulateKeyPress
                 //    Console.WriteLine(e.ToString());
                 //}
             }
+
+            findTargetWindow();
         }
 
         private void doItButton_Click(object sender, EventArgs e)

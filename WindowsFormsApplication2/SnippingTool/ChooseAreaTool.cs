@@ -95,6 +95,8 @@ namespace Snipping_OCR
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            Console.WriteLine("ChooseAreaTool.OnMouseUp 1");
+            
             Invalidate();
             Done();
         }
@@ -366,6 +368,7 @@ namespace Snipping_OCR
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
+            Console.WriteLine("ChooseAreaTool.OnMouseUp 2");
             if (_showGrabRectangle)
             {
                 //aus is

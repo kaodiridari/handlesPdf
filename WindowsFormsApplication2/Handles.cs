@@ -16,9 +16,8 @@ namespace SimulateKeyPress
     class HandlesForm : Form
     {
         private TextBox textBox1;
-        private Button button1;
+        private Button windowChosenButton;
         private Button moveToTargetWindowButton;
-        private Button button2;
         POINT _targetScreenPos;
 
         Rectangle _rectScaled;
@@ -36,7 +35,11 @@ namespace SimulateKeyPress
         private CheckBox checkBoxKeep;
         private TextBox pathOfShoots;
         private Label label2;
+        private System.ComponentModel.IContainer components;
+        private ToolTip ToolTip1;
         private IntPtr myHandle;
+
+        public Color _pickedColor { get; private set; }
 
         [STAThread]
         public static void Main()
@@ -85,11 +88,19 @@ namespace SimulateKeyPress
             }
         }
 
-        private void button1_Click(object sender, EventArgs e)
+        private bool _autoSearch = false;
+
+        private void windowChosenButton_Click(object sender, EventArgs e)
         {
+            Console.WriteLine("windowChosenButton_Click");
             findTargetWindow();
+            _autoSearch = true;
+
+            //new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
+
             ////shift+ctrl + 1 = drehen guz
-            //SetForegroundWindow(myHandle);
+            SetForegroundWindow(myHandle);
+            FindPage();
             //SendKeys.SendWait("+^1");
             ////Thread.Sleep(1000);
 
@@ -131,6 +142,8 @@ namespace SimulateKeyPress
          */
         private void findTargetWindow()
         {
+            Console.WriteLine("findTargetWindow()");
+
             System.Drawing.Point p = new Point(_targetScreenPos.X, _targetScreenPos.Y);
             IntPtr windowAtPoint = WindowFromPoint(p);   //kind-fenster
             IntPtr getAncestorWindowGetRoot = GetAncestor(windowAtPoint, GetAncestorFlags.GetRoot);
@@ -153,10 +166,10 @@ namespace SimulateKeyPress
 
     private void InitializeComponent()
         {
-            this.button1 = new System.Windows.Forms.Button();
+            this.components = new System.ComponentModel.Container();
+            this.windowChosenButton = new System.Windows.Forms.Button();
             this.moveToTargetWindowButton = new System.Windows.Forms.Button();
             this.textBox1 = new System.Windows.Forms.TextBox();
-            this.button2 = new System.Windows.Forms.Button();
             this.doItButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.numberOfPages = new System.Windows.Forms.TextBox();
@@ -165,18 +178,19 @@ namespace SimulateKeyPress
             this.checkBoxKeep = new System.Windows.Forms.CheckBox();
             this.pathOfShoots = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
+            this.ToolTip1 = new System.Windows.Forms.ToolTip(this.components);
             this.SuspendLayout();
             // 
-            // button1
+            // windowChosenButton
             // 
-            this.button1.AutoSize = true;
-            this.button1.Enabled = false;
-            this.button1.Location = new System.Drawing.Point(10, 10);
-            this.button1.Name = "button1";
-            this.button1.Size = new System.Drawing.Size(125, 27);
-            this.button1.TabIndex = 0;
-            this.button1.Text = "Window choosen";
-            this.button1.Click += new System.EventHandler(this.button1_Click);
+            this.windowChosenButton.AutoSize = true;
+            this.windowChosenButton.Enabled = false;
+            this.windowChosenButton.Location = new System.Drawing.Point(10, 10);
+            this.windowChosenButton.Name = "windowChosenButton";
+            this.windowChosenButton.Size = new System.Drawing.Size(125, 27);
+            this.windowChosenButton.TabIndex = 0;
+            this.windowChosenButton.Text = "Window chosen";
+            this.windowChosenButton.Click += new System.EventHandler(this.windowChosenButton_Click);
             // 
             // moveToTargetWindowButton
             // 
@@ -187,8 +201,8 @@ namespace SimulateKeyPress
             this.moveToTargetWindowButton.Size = new System.Drawing.Size(155, 27);
             this.moveToTargetWindowButton.TabIndex = 1;
             this.moveToTargetWindowButton.Text = "Move mouse to target";
-            this.moveToTargetWindowButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.MyOnMouseUp);
-            this.moveToTargetWindowButton.Enabled = false;
+            this.ToolTip1.SetToolTip(this.moveToTargetWindowButton, "Keep pressed. Move to background - cursor vanishes. Release.");
+            this.moveToTargetWindowButton.MouseUp += new System.Windows.Forms.MouseEventHandler(this.PickBackgroundColor);
             // 
             // textBox1
             // 
@@ -197,16 +211,6 @@ namespace SimulateKeyPress
             this.textBox1.Name = "textBox1";
             this.textBox1.Size = new System.Drawing.Size(259, 168);
             this.textBox1.TabIndex = 0;
-            // 
-            // button2
-            // 
-            this.button2.Location = new System.Drawing.Point(10, 92);
-            this.button2.Name = "button2";
-            this.button2.Size = new System.Drawing.Size(176, 23);
-            this.button2.TabIndex = 2;
-            this.button2.Text = "Choose snipping region.";
-            this.button2.UseVisualStyleBackColor = true;
-            this.button2.Click += new System.EventHandler(this.snippButton_Click);
             // 
             // doItButton
             // 
@@ -300,8 +304,7 @@ namespace SimulateKeyPress
             this.Controls.Add(this.numberOfPages);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.doItButton);
-            this.Controls.Add(this.button2);
-            this.Controls.Add(this.button1);
+            this.Controls.Add(this.windowChosenButton);
             this.Controls.Add(this.moveToTargetWindowButton);
             this.Controls.Add(this.textBox1);
             this.Name = "HandlesForm";
@@ -311,8 +314,10 @@ namespace SimulateKeyPress
 
         }
 
-        private void MyOnMouseUp(object sender, MouseEventArgs e)
+        private void PickBackgroundColor(object sender, MouseEventArgs e)
         {
+            Console.WriteLine("PickBackgroundColor()");
+
             // Start the snip on mouse down
             if (e.Button != MouseButtons.Left)
             {
@@ -321,9 +326,22 @@ namespace SimulateKeyPress
             textBox1.AppendText("MyOnMouseUp: " + e.Location + "\n");
             
             GetCursorPos(out _targetScreenPos);
-            textBox1.AppendText("MyOnMouseUp: " + _targetScreenPos.X + ", " + _targetScreenPos.Y + "\n");
+            _pickedColor = GetColorAt(_targetScreenPos);
+            textBox1.AppendText("MyOnMouseUp: " + _targetScreenPos.X + ", " + _targetScreenPos.Y + " color at point: "  + _pickedColor.ToString() + "\n");
             
-            button1.Enabled = true;
+            windowChosenButton.Enabled = true;
+        }
+
+        private Color GetColorAt(POINT _targetScreenPos)
+        {
+            Bitmap bmp = new Bitmap(1, 1);
+            Rectangle bounds = new Rectangle(_targetScreenPos.X, _targetScreenPos.Y, 1, 1);
+            using (Graphics g = Graphics.FromImage(bmp))
+            {
+                g.CopyFromScreen(bounds.Location, Point.Empty, bounds.Size);
+            }
+            Color pixel = bmp.GetPixel(0, 0);
+            return pixel;
         }
 
         private void snippButton_Click(object sender, EventArgs e)
@@ -347,23 +365,23 @@ namespace SimulateKeyPress
             SendKeys.SendWait("^l");
             Thread.Sleep(1000);
 
-            findPage(false);
+            FindPage();
         }
 
-        void findPage(bool autoSearch)
+        private void FindPage()
         {
             //snipping form aufmachen, bei MouseUp Rechteck speichern (nicht den screenshot)
             //ChooseAreaTool.Snip();
             //public static void Snip()
             //{
-            Console.WriteLine("findPage(bool autoSearch" + autoSearch);
+            Console.WriteLine("findPage(bool autoSearch" + _autoSearch);
             List<DeviceInfo> screens = ScreenHelper.GetMonitorsInfo();
 
-            //alle meine Monitore
+            //
             _formsForScreens = new ChooseAreaTool[screens.Count];
-
             for (int i = 0; i < screens.Count; i++)
             {
+                Console.WriteLine("findPage handling screen " + i);
                 int hRes = screens[i].HorizontalResolution;
                 int vRes = screens[i].VerticalResolution;
                 int top = screens[i].MonitorArea.Top;
@@ -375,7 +393,7 @@ namespace SimulateKeyPress
                     g.CopyFromScreen(left, top, 0, 0, bmp.Size);
 
                 }
-                _formsForScreens[i] = ChooseAreaToolFac.get(bmp, left, top, hRes, vRes, i, autoSearch);
+                _formsForScreens[i] = ChooseAreaToolFac.get(bmp, left, top, hRes, vRes, i, _autoSearch, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
                 _formsForScreens[i].AreaSelected += OnAreaSelected;
                 _formsForScreens[i].Show();
                 _formsForScreens[i].start();
@@ -399,21 +417,23 @@ namespace SimulateKeyPress
             //und die forms loswerden
             for (int i = 0; i < _formsForScreens.Length; i++)
             {
-                _formsForScreens[i].Dispose();
-                //try
-                //{
-                //    if (_formsForScreens != null)
-                //    {
-                //        _formsForScreens[i].Dispose();
-                //    } else
-                //    {
-                //        Console.WriteLine("ups " + i + " is null");
-                //    }
-                //}  catch (Exception)
-                //{
-                //    //ignore
-                //    Console.WriteLine(e.ToString());
-                //}
+                //_formsForScreens[i].Dispose();
+                try
+                {
+                    if (_formsForScreens != null)
+                    {
+                        _formsForScreens[i].Dispose();
+                    }
+                    else
+                    {
+                        Console.WriteLine("ups " + i + " is null");
+                    }
+                }
+                catch (Exception)
+                {
+                    //ignore
+                    Console.WriteLine(e.ToString());
+                }
             }
 
             findTargetWindow();
@@ -585,6 +605,16 @@ namespace SimulateKeyPress
         }
 
         private void label1_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void toolTip1_Popup(object sender, PopupEventArgs e)
+        {
+
+        }
+
+        private void toolTip1_Popup_1(object sender, PopupEventArgs e)
         {
 
         }

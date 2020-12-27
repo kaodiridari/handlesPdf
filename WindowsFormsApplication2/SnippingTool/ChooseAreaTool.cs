@@ -28,13 +28,15 @@ namespace Snipping_OCR
 
     public class ChooseAreaToolFac
     {
-        public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, bool searchAuto)
+        public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, bool searchAuto, Color background, Point locationOfPickedBackground)
         {
             if (searchAuto)
-            {               
-                return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber);
+            {
+                Console.WriteLine("returning ChooseAreaToolAutomatic");
+                return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber, background, locationOfPickedBackground);
             } else
             {
+                Console.WriteLine("returning ChooseAreaTool");
                 return new ChooseAreaTool(desktopScreenShot, x, y, width, height, screenNumber);
             }
         }
@@ -46,13 +48,15 @@ namespace Snipping_OCR
         public event EventHandler AreaSelected;       
        
         protected Rectangle _rectSelection;
+        protected Boolean _rectSelectionIsPreset;
         private Point _pointStart;
         private int myScreenNumber;
         protected Image _deskTopScreenShot;
         
         public ChooseAreaTool(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber)
         {
-            Console.WriteLine("ChooseAreaTool x=" + x + "y=" + y + "width=" + width + "height=" + height);
+            Console.WriteLine("ChooseAreaTool x=" + x + "y=" + y + "width=" + width + "height=" + height + " " + _rectSelection);
+
             InitializeComponent();            
             myScreenNumber = screenNumber;
             BackgroundImage = desktopScreenShot;
@@ -66,10 +70,20 @@ namespace Snipping_OCR
             DoubleBuffered = true;
             Cursor = Cursors.Cross;
             TopMost = true;
+            if (_rectSelection != null)
+            {
+                Console.WriteLine("ChooseAreaTool with preset rectangle");
+                _rectSelectionIsPreset = true;
+            }else
+            {
+                Console.WriteLine("ChooseAreaTool without preset rectangle");
+                _rectSelectionIsPreset = false;
+            }
         }
                
         protected override void OnMouseDown(MouseEventArgs e)
         {
+            Console.WriteLine("ChooseAreaTool.OnMouseDown()");
             if (e.Button != MouseButtons.Left)
             {
                 return;
@@ -95,13 +109,23 @@ namespace Snipping_OCR
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            Console.WriteLine("ChooseAreaTool.OnMouseUp 1");
+            Console.WriteLine("ChooseAreaTool.OnMouseUp()");
             
             Invalidate();
             Done();
         }
 
-        
+
+        protected override void OnMouseClick(MouseEventArgs e)
+        {
+            Console.WriteLine("ChooseAreaTool.OnMouseClick()");
+
+            Invalidate();
+            Done();
+        }
+
+
+
 
         protected void Done()
         {
@@ -139,7 +163,7 @@ namespace Snipping_OCR
 
         protected override void OnPaint(PaintEventArgs e)
         {
-            Console.WriteLine("OnPaint()");
+            //Console.WriteLine("OnPaint()");
            
             using (Brush br = new SolidBrush(Color.FromArgb(120, Color.White)))
             {
@@ -151,12 +175,12 @@ namespace Snipping_OCR
                 e.Graphics.FillRectangle(br, new Rectangle(x2, 0, Width - x2, Height));
                 e.Graphics.FillRectangle(br, new Rectangle(x1, 0, x2 - x1, y1));
                 e.Graphics.FillRectangle(br, new Rectangle(x1, y2, x2 - x1, Height - y2));
-                Console.WriteLine("x1:" + x1 + " height:" + Height + " x2:" + x2 + " Width " + Width + " y1:" + y1 + " y2:" + y2);
+                //Console.WriteLine("x1:" + x1 + " height:" + Height + " x2:" + x2 + " Width " + Width + " y1:" + y1 + " y2:" + y2);
             } 
             using (Pen pen = new Pen(Color.Pink, 2))
             {
                 e.Graphics.DrawRectangle(pen, _rectSelection);
-                Console.WriteLine("Rectangled.");
+                //Console.WriteLine("Rectangled.");
                 //Thread.Sleep(3000);
             }
         }
@@ -172,141 +196,152 @@ namespace Snipping_OCR
         }
     }
 
-    ///// <summary>
-    ///// Dient zum korrigieren des automatisch gefundenen Fensterbereichs.
-    ///// 
-    ///// </summary>
-    //public class ChooseAreaToolAdjustRectangle : Form//ChooseAreaTool
-    //{
-    //    //public ChooseAreaToolAdjustRectangle(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber) : base (desktopScreenShot, x, y, width, height, screenNumber)
-    //    //{
-    //    //}
+    /// <summary>
+    /// Dient zum korrigieren des automatisch gefundenen Fensterbereichs.
+    /// 
+    /// </summary>
+    public class ChooseAreaToolAdjustRectangle : Form//ChooseAreaTool
+    {
+        //public ChooseAreaToolAdjustRectangle(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber) : base (desktopScreenShot, x, y, width, height, screenNumber)
+        //{
+        //}
 
-    //    Boolean bHaveMouse;
-    //    Point ptOriginal = new Point();
-    //    Point ptLast = new Point();
+        Boolean bHaveMouse;
+        Point ptOriginal = new Point();
+        Point ptLast = new Point();
 
-    //    // Called when the left mouse button is pressed. 
-    //    public void MyMouseDown(Object sender, MouseEventArgs e)
-    //    {
-    //        // Make a note that we "have the mouse".
-    //        bHaveMouse = true;
-    //        // Store the "starting point" for this rubber-band rectangle.
-    //        ptOriginal.X = e.X;
-    //        ptOriginal.Y = e.Y;
-    //        // Special value lets us know that no previous
-    //        // rectangle needs to be erased.
-    //        ptLast.X = -1;
-    //        ptLast.Y = -1;
-    //    }
-    //    // Convert and normalize the points and draw the reversible frame.
-    //    private void MyDrawReversibleRectangle(Point p1, Point p2)
-    //    {
-    //        Rectangle rc = new Rectangle();
+        // Called when the left mouse button is pressed. 
+        public void MyMouseDown(Object sender, MouseEventArgs e)
+        {
+            // Make a note that we "have the mouse".
+            bHaveMouse = true;
+            // Store the "starting point" for this rubber-band rectangle.
+            ptOriginal.X = e.X;
+            ptOriginal.Y = e.Y;
+            // Special value lets us know that no previous
+            // rectangle needs to be erased.
+            ptLast.X = -1;
+            ptLast.Y = -1;
+        }
+        // Convert and normalize the points and draw the reversible frame.
+        private void MyDrawReversibleRectangle(Point p1, Point p2)
+        {
+            Rectangle rc = new Rectangle();
 
-    //        // Convert the points to screen coordinates.
-    //        p1 = PointToScreen(p1);
-    //        p2 = PointToScreen(p2);
-    //        // Normalize the rectangle.
-    //        if (p1.X < p2.X)
-    //        {
-    //            rc.X = p1.X;
-    //            rc.Width = p2.X - p1.X;
-    //        }
-    //        else
-    //        {
-    //            rc.X = p2.X;
-    //            rc.Width = p1.X - p2.X;
-    //        }
-    //        if (p1.Y < p2.Y)
-    //        {
-    //            rc.Y = p1.Y;
-    //            rc.Height = p2.Y - p1.Y;
-    //        }
-    //        else
-    //        {
-    //            rc.Y = p2.Y;
-    //            rc.Height = p1.Y - p2.Y;
-    //        }
-    //        // Draw the reversible frame.
-    //        Console.WriteLine("Rectangle " + rc.ToString());
-    //        ControlPaint.DrawReversibleFrame(rc, Color.Red, FrameStyle.Dashed);  //geht nicht gescheit
-    //        //ControlPaint.DrawGrabHandle(e.);
-    //    }
+            // Convert the points to screen coordinates.
+            p1 = PointToScreen(p1);
+            p2 = PointToScreen(p2);
+            // Normalize the rectangle.
+            if (p1.X < p2.X)
+            {
+                rc.X = p1.X;
+                rc.Width = p2.X - p1.X;
+            }
+            else
+            {
+                rc.X = p2.X;
+                rc.Width = p1.X - p2.X;
+            }
+            if (p1.Y < p2.Y)
+            {
+                rc.Y = p1.Y;
+                rc.Height = p2.Y - p1.Y;
+            }
+            else
+            {
+                rc.Y = p2.Y;
+                rc.Height = p1.Y - p2.Y;
+            }
+            // Draw the reversible frame.
+            Console.WriteLine("Rectangle " + rc.ToString());
+            ControlPaint.DrawReversibleFrame(rc, Color.Red, FrameStyle.Dashed);  //geht nicht gescheit
+            //ControlPaint.DrawGrabHandle(e.);
+        }
 
-    //    // Called when the left mouse button is released.
-    //    public void MyMouseUp(Object sender, MouseEventArgs e)
-    //    {
-    //        // Set internal flag to know we no longer "have the mouse".
-    //        bHaveMouse = false;
-    //        // If we have drawn previously, draw again in that spot
-    //        // to remove the lines.
-    //        if (ptLast.X != -1)
-    //        {
-    //            Point ptCurrent = new Point(e.X, e.Y);
-                
-    //            MyDrawReversibleRectangle(ptOriginal, ptLast);
-    //        }
-    //        // Set flags to know that there is no "previous" line to reverse.
-    //        ptLast.X = -1;
-    //        ptLast.Y = -1;
-    //        ptOriginal.X = -1;
-    //        ptOriginal.Y = -1;
-    //    }
+        // Called when the left mouse button is released.
+        public void MyMouseUp(Object sender, MouseEventArgs e)
+        {
+            // Set internal flag to know we no longer "have the mouse".
+            bHaveMouse = false;
+            // If we have drawn previously, draw again in that spot
+            // to remove the lines.
+            if (ptLast.X != -1)
+            {
+                Point ptCurrent = new Point(e.X, e.Y);
 
-    //    protected override void OnPaint(PaintEventArgs e)
-    //    {
-    //        base.OnPaint(e);
-    //        var g = e.Graphics;
-    //    }
-    //    // Called when the mouse is moved.
-    //    public void MyMouseMove(Object sender, MouseEventArgs e)
-    //    {
-    //        Point ptCurrent = new Point(e.X, e.Y);
-    //        // If we "have the mouse", then we draw our lines.
-    //        if (bHaveMouse)
-    //        {
-    //            // If we have drawn previously, draw again in
-    //            // that spot to remove the lines.
-    //            if (ptLast.X != -1)
-    //            {
-    //                MyDrawReversibleRectangle(ptOriginal, ptLast);
-    //            }
-    //            // Update last point.
-    //            ptLast = ptCurrent;
-    //            // Draw new lines.
-    //            MyDrawReversibleRectangle(ptOriginal, ptCurrent);
-    //        }
-    //    }
-    //    // Set up delegates for mouse events.
-    //    protected override void OnLoad(System.EventArgs e)
-    //    {
-    //        MouseDown += new MouseEventHandler(MyMouseDown);
-    //        MouseUp += new MouseEventHandler(MyMouseUp);
-    //        MouseMove += new MouseEventHandler(MyMouseMove);
-    //        bHaveMouse = false;
-    //    }
-    //}   
+                MyDrawReversibleRectangle(ptOriginal, ptLast);
+            }
+            // Set flags to know that there is no "previous" line to reverse.
+            ptLast.X = -1;
+            ptLast.Y = -1;
+            ptOriginal.X = -1;
+            ptOriginal.Y = -1;
+        }
 
- 
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            base.OnPaint(e);
+            var g = e.Graphics;
+        }
+        // Called when the mouse is moved.
+        public void MyMouseMove(Object sender, MouseEventArgs e)
+        {
+            Point ptCurrent = new Point(e.X, e.Y);
+            // If we "have the mouse", then we draw our lines.
+            if (bHaveMouse)
+            {
+                // If we have drawn previously, draw again in
+                // that spot to remove the lines.
+                if (ptLast.X != -1)
+                {
+                    MyDrawReversibleRectangle(ptOriginal, ptLast);
+                }
+                // Update last point.
+                ptLast = ptCurrent;
+                // Draw new lines.
+                MyDrawReversibleRectangle(ptOriginal, ptCurrent);
+            }
+        }
+        // Set up delegates for mouse events.
+        protected override void OnLoad(System.EventArgs e)
+        {
+            MouseDown += new MouseEventHandler(MyMouseDown);
+            MouseUp += new MouseEventHandler(MyMouseUp);
+            MouseMove += new MouseEventHandler(MyMouseMove);
+            bHaveMouse = false;
+        }
+    }
+
+
 
     public class ChooseAreaToolAutomatic : ChooseAreaTool, RepaintAble
     {
         private bool _showGrabRectangle;
         private GrabRectangle _grabRectangle;
+        private Color _background;
+        private Point _locationOfBackground;
 
-        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber) : base (desktopScreenShot, x, y, width, height, screenNumber)
+        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, Color background, Point locationOfBackground) :
+            base (desktopScreenShot, x, y, width, height, screenNumber)
         {
-            
+            Console.WriteLine("ChooseAreaToolAutomatic");
+            _background = background;
+            _locationOfBackground = locationOfBackground;
+            List<Bitmap> testPictures = new List<Bitmap>();
+            testPictures.Add((Bitmap)desktopScreenShot);
+            List<Rectangle> rectangles = PageSizeFinder.findPageInAlmostFullScreenImages(testPictures, background, locationOfBackground.X, locationOfBackground.Y);
+
+            //Now take first page. TODO some check if we have poorly chosen.
+            _rectSelection = rectangles[0];
         }
 
-        private GrabRectangle getGrabRectangle(Rectangle r)
+        private GrabRectangle getGrabRectangle(Rectangle rectangle)
         {
             if (_grabRectangle == null)
             {
-                _grabRectangle = new GrabRectangle(this.Cursor, r, this.Size, this);
+                _grabRectangle = new GrabRectangle(this.Cursor, rectangle, this.Size, this);
             }
-            _grabRectangle.setRectangle(r);
+            _grabRectangle.setRectangle(rectangle);
             return _grabRectangle;
         }
 
@@ -324,7 +359,7 @@ namespace Snipping_OCR
             base.start();
             List<Bitmap> im = new List<Bitmap>();
             im.Add((Bitmap)BackgroundImage);
-            var rects = PageSizeFinder.findPageInFullScreenImages(im);
+            var rects = PageSizeFinder.findPageInAlmostFullScreenImages(im, _background, _locationOfBackground.X, _locationOfBackground.Y);
 
             //skallierung            
             UnScaleRectSelection(rects[0]);

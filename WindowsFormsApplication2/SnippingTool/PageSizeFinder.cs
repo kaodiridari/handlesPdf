@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace WindowsFormsApplication2.SnippingTool
 {
@@ -126,6 +127,202 @@ namespace WindowsFormsApplication2.SnippingTool
                 var r = new Rectangle(leftUpper, leftUpperY, Math.Abs(rightUpper - leftUpper), Math.Abs(leftUpperY - leftLowerY));
                 rectangles.Add(r);
             }            
+            return rectangles;
+        }
+
+        //C:\Users\user\Documents\Visual Studio 2015\Projects\handlesPdf\WindowsFormsApplication2\testShoots
+        //testpage.png
+        //MyOnMouseUp: {X=98,Y=14}
+        //MyOnMouseUp: 424, 756 color at point: Color[A = 255, R = 128, G = 128, B = 128]
+        public static List<Rectangle> findPageInAlmostFullScreenImages(List<Bitmap> liOfFullScreenImages, Color background, int x, int y)
+        {
+            //Seite füllt Bildschirmhöhe nicht voll aus. Streifen links, rechts, oben, unten, aber keine Unterbrechung.
+            //Es kann an den Seiten Leisten geben.
+            //Seiten sind immer zentriert.
+            //
+            //In der Bildmitte anfangen
+            //Punkt hat zufällig Hintergrundfarbe -> neuer Anfang irgendwo daneben usw.
+            //Nach oben, unten, links, rechts laufen
+            //Übergang zu Hintergrundfarbe ergibt Kanten.
+            //Mehrmals machen.
+            //Voraussetzung: Gelieferter Punkt liegt im Hintergrund: prüfen.
+            //Mit ein paar Seiten machen, größtes Rechteck nehmen.
+
+            List <Rectangle> rectangles = new List<Rectangle>(liOfFullScreenImages.Count);
+            bool[] badImages = new bool[liOfFullScreenImages.Count];
+            const int SUBSEQUENTHITS_NEEDED = 5;
+            int numberOfImage = -1;
+            foreach (Bitmap image in liOfFullScreenImages)
+            {
+                image.Save(@"C:\Users\user\Documents\Visual Studio 2015\Projects\handlesPdf\WindowsFormsApplication2\testShoots\screenshot.png", ImageFormat.Png);
+                numberOfImage++;
+                //Center
+                int cy = image.Height / 2;
+                int cx = image.Width / 2;
+                int x_north = cx;
+                int y_north = cy;
+                Console.WriteLine("image.Size: " + image.Size);
+
+                //Search in all four directions for the background. Five subsequent hits of background-color we like.
+                //Be aware of the gray.
+                int foundNorthY = -1;
+                {
+                    //North                    
+                    int subsequentHitsNorth = 0;
+
+                    bool northIsDone = false;
+                    for (int northY = cy; northY >= 0 && subsequentHitsNorth < 5; northY--)
+                    {
+                        Color p = image.GetPixel(x_north, northY);
+                        if (p.Equals(background))
+                        {
+                            subsequentHitsNorth++;
+                            Console.WriteLine("subsequentHitsNorth: " + subsequentHitsNorth);
+                        }
+                        else
+                        {
+                            subsequentHitsNorth = 0;
+                        }
+                        if (subsequentHitsNorth >= SUBSEQUENTHITS_NEEDED)
+                        {
+                            foundNorthY = northY + SUBSEQUENTHITS_NEEDED;
+                            northIsDone = true;
+                            break;
+                        }
+                    }
+                    if (!northIsDone)
+                    {
+                        badImages[numberOfImage] = true;
+                        Console.WriteLine("No northern border found this beauty. " + numberOfImage);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Northern border found this beauty. " + numberOfImage + " x = " + foundNorthY);
+                    }
+                }
+
+                //
+                //southborder; pages are symetrical
+                int foundSouthY = -1;
+                {
+                    int dy = Math.Abs(cy - foundNorthY);
+                    int start = cy + dy - 20; //few steps back
+                    Console.WriteLine("starting at: " + start);
+
+                    bool southIsDone = false;
+                    int subsequentHitsSouth = 0;
+                    for (int southY = start; southY <= image.Height && subsequentHitsSouth < 5; southY++)
+                    {
+                        Color p = image.GetPixel(x_north, southY);
+                        if (p.Equals(background))
+                        {
+                            subsequentHitsSouth++;
+                            Console.WriteLine("subsequentHitsSouth: " + subsequentHitsSouth);
+                        }
+                        else
+                        {
+                            subsequentHitsSouth = 0;
+                        }
+                        if (subsequentHitsSouth >= SUBSEQUENTHITS_NEEDED)
+                        {
+                            foundSouthY = southY - SUBSEQUENTHITS_NEEDED;
+                            southIsDone = true;
+                            break;
+                        }
+                    }
+                    if (!southIsDone)
+                    {
+                        badImages[numberOfImage] = true;
+                        Console.WriteLine("No southern border found for this beauty. " + numberOfImage);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Southern border found for this beauty. " + numberOfImage + " y = " + foundSouthY);
+                    }
+                }
+
+                int foundEastX = -1;
+                {
+                    //East                    
+                    int subsequentHitsEast = 0;
+
+                    bool eastIsDone = false;
+                    for (int eastX = cx; eastX >= 0 && subsequentHitsEast < 5; eastX--)
+                    {
+                        Color p = image.GetPixel(eastX, y_north);
+                        if (p.Equals(background))
+                        {
+                            subsequentHitsEast++;
+                            Console.WriteLine("subsequentHitsEast: " + subsequentHitsEast);
+                        }
+                        else
+                        {
+                            subsequentHitsEast = 0;
+                        }
+                        if (subsequentHitsEast >= SUBSEQUENTHITS_NEEDED)
+                        {
+                            foundEastX = eastX + SUBSEQUENTHITS_NEEDED;
+                            eastIsDone = true;
+                            break;
+                        }
+                    }
+                    if (!eastIsDone)
+                    {
+                        badImages[numberOfImage] = true;
+                        Console.WriteLine("No eastern border found for this beauty. " + numberOfImage);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Eastern border found for this beauty. " + numberOfImage + " x = " + foundEastX);
+                    }
+                } //end east
+
+                //
+                //westborder; pages are symetrical
+                int foundWestX = -1;
+                {
+                    int dx = Math.Abs(cx - foundEastX);
+                    int start = cx + dx - 20; //few steps back
+                    Console.WriteLine("starting at: " + start);
+
+                    bool westIsDone = false;
+                    int subsequentHitsWest = 0;
+                    for (int westX = start; westX <= image.Width && subsequentHitsWest < 5; westX++)
+                    {
+                        Color p = image.GetPixel(westX, y_north);
+                        if (p.Equals(background))
+                        {
+                            subsequentHitsWest++;
+                            Console.WriteLine("subsequentHitsWest: " + subsequentHitsWest);
+                        }
+                        else
+                        {
+                            subsequentHitsWest = 0;
+                        }
+                        if (subsequentHitsWest >= SUBSEQUENTHITS_NEEDED)
+                        {
+                            foundWestX = westX - SUBSEQUENTHITS_NEEDED;
+                            westIsDone = true;
+                            break;
+                        }
+                    }
+                    if (!westIsDone)
+                    {
+                        badImages[numberOfImage] = true;
+                        Console.WriteLine("No western border found for this beauty. " + numberOfImage);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Western border found for this beauty. " + numberOfImage + " y = " + foundWestX);
+                    }
+                } //next image
+                int width = Math.Abs(foundWestX - foundEastX);
+                int height = Math.Abs(foundSouthY - foundNorthY);
+                int upperLeftX = foundEastX;
+                int upperLeftY = foundNorthY;
+                rectangles.Add(new Rectangle(upperLeftX, upperLeftY, width, height));
+            }
+
             return rectangles;
         }
     }

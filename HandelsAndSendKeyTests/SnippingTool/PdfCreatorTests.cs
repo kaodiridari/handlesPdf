@@ -31,7 +31,7 @@ namespace WindowsFormsApplication2.SnippingTool.Tests
         [TestMethod()]
         public void HalloTest2()
         {
-            const string dir = @"C:\Users\user\Documents\screenshoots\kjkjhjkh\26";
+            const string dir = @"C:\Users\user\Documents\screenshoots\temp";
 
             //A4 210 mm x 297 mm
             const double pageWidthMM = 210.0;

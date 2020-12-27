@@ -1,12 +1,16 @@
 Tool For Making Screenshots
 ---------------------------
 
+THIS WORKS ONLY WITH A SINGLE SCREEN.
+
 1. Choose the Window of which you want to make a screenshoot.
-	Press the button,
+	Press the button "Move mouse ...",
 	move the mouse (a cross) to the window,
-	release the mouse button
-	and press then the confirm button.
+	release the mouse button on the background. On a grey background (128,128,128) the cross vanishes. That's fine.
+	Press then the confirm button ("Window chosen").
+	A rectangle is drawn around the page. Confirm.
 	This may lead to some misbehaviour of the target application.
+2. The dialog has probably vanished. ALT - TAB it.
 OR better do:
 1. Press 'Auto choose ...' (which doesn't anything automatic so far)
 	choose the area of the screenshot (it's like in snipping tool).

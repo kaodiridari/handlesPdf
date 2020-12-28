@@ -16,28 +16,28 @@ namespace Snipping_OCR
     {
         public Rectangle rectScaled { get; }
         public Rectangle rectUnscaled { get; }
-        public int screenNumber { get; }
+        //public int screenNumber { get; }
 
-        public RectangleEventArgs(Rectangle rectScaled, Rectangle rectUnscaled, int screenNumber)
+        public RectangleEventArgs(Rectangle rectScaled, Rectangle rectUnscaled/*, int screenNumber*/)
         {
             this.rectScaled = rectScaled;
             this.rectUnscaled = rectUnscaled;
-            this.screenNumber = screenNumber;
+            //this.screenNumber = screenNumber;
         }
     }
 
     public class ChooseAreaToolFac
     {
-        public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, bool searchAuto, Color background, Point locationOfPickedBackground)
+        public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, bool searchAuto, Color background, Point locationOfPickedBackground)
         {
             if (searchAuto)
             {
                 Console.WriteLine("returning ChooseAreaToolAutomatic");
-                return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber, background, locationOfPickedBackground);
+                return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height/*, screenNumber*/, background, locationOfPickedBackground);
             } else
             {
                 Console.WriteLine("returning ChooseAreaTool");
-                return new ChooseAreaTool(desktopScreenShot, x, y, width, height, screenNumber);
+                return new ChooseAreaTool(desktopScreenShot, x, y, width, height/*, screenNumber*/);
             }
         }
     }
@@ -50,15 +50,15 @@ namespace Snipping_OCR
         protected Rectangle _rectSelection;
         protected Boolean _rectSelectionIsPreset;
         private Point _pointStart;
-        private int myScreenNumber;
+        //private int myScreenNumber;
         protected Image _deskTopScreenShot;
         
-        public ChooseAreaTool(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber)
+        public ChooseAreaTool(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/)
         {
             Console.WriteLine("ChooseAreaTool x=" + x + "y=" + y + "width=" + width + "height=" + height + " " + _rectSelection);
 
             InitializeComponent();            
-            myScreenNumber = screenNumber;
+            //myScreenNumber = screenNumber;
             BackgroundImage = desktopScreenShot;
             _deskTopScreenShot = desktopScreenShot;
             BackgroundImageLayout = ImageLayout.Stretch;
@@ -72,7 +72,7 @@ namespace Snipping_OCR
             TopMost = true;
             if (_rectSelection != null)
             {
-                Console.WriteLine("ChooseAreaTool with preset rectangle");
+                Console.WriteLine("ChooseAreaTool with preset rectangle: " + _rectSelection);
                 _rectSelectionIsPreset = true;
             }else
             {
@@ -109,7 +109,7 @@ namespace Snipping_OCR
 
         protected override void OnMouseUp(MouseEventArgs e)
         {
-            Console.WriteLine("ChooseAreaTool.OnMouseUp()");
+            Console.WriteLine("ChooseAreaTool.OnMouseUp(): " + _rectSelection);
             
             Invalidate();
             Done();
@@ -133,7 +133,7 @@ namespace Snipping_OCR
             Rectangle rectUnScaled = new Rectangle(_rectSelection.X, _rectSelection.Y, _rectSelection.Width, _rectSelection.Height);            
 
             //NULL-Bedingungsoperator https://msdn.microsoft.com/de-de/library/dn986595.aspx
-            AreaSelected?.Invoke(this, new RectangleEventArgs(rectScaled, rectUnScaled, myScreenNumber));
+            AreaSelected?.Invoke(this, new RectangleEventArgs(rectScaled, rectUnScaled/*, myScreenNumber*/));
         }
 
         protected Rectangle ScaleRectSelection()
@@ -321,8 +321,8 @@ namespace Snipping_OCR
         private Color _background;
         private Point _locationOfBackground;
 
-        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height, int screenNumber, Color background, Point locationOfBackground) :
-            base (desktopScreenShot, x, y, width, height, screenNumber)
+        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, Color background, Point locationOfBackground) :
+            base (desktopScreenShot, x, y, width, height/*, screenNumber*/)
         {
             Console.WriteLine("ChooseAreaToolAutomatic");
             _background = background;
@@ -363,6 +363,9 @@ namespace Snipping_OCR
 
             //skallierung            
             UnScaleRectSelection(rects[0]);
+            Console.WriteLine("rects[0]: " + rects[0]);
+            Console.WriteLine("rects[0]: " + _rectSelection);
+            Console.WriteLine("rects[0]: " + _grabRectangle);
             Refresh(); // -> OnPaint
             DialogResult result = MessageBox.Show("Auswahl ok?", "Title", MessageBoxButtons.YesNo, MessageBoxIcon.Question,  MessageBoxDefaultButton.Button1);
             if (result.Equals(DialogResult.No)) {

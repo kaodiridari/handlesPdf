@@ -1,8 +1,6 @@
 Tool For Making Screenshots
 ---------------------------
 
-THIS WORKS ONLY WITH A SINGLE SCREEN.
-
 1. Choose the Window of which you want to make a screenshoot.
 	Press the button "Move mouse ...",
 	move the mouse (a cross) to the window,

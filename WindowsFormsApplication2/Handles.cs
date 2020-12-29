@@ -37,7 +37,7 @@ namespace SimulateKeyPress
         private Label label2;
         private System.ComponentModel.IContainer components;
         private ToolTip ToolTip1;
-        private IntPtr myHandle;
+        private IntPtr _myHandle;
 
         public Color _pickedColor { get; private set; }
 
@@ -101,6 +101,7 @@ namespace SimulateKeyPress
 
         private bool _autoSearch = false;
         private Screen _pickedScreen;
+        private Point _pointPointedAsWindow;
 
         private void windowChosenButton_Click(object sender, EventArgs e)
         {
@@ -111,7 +112,7 @@ namespace SimulateKeyPress
             //new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height, screenNumber, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
 
             ////shift+ctrl + 1 = drehen guz
-            SetForegroundWindow(myHandle);
+            SetForegroundWindow(_myHandle);
             FindPage();
             //SendKeys.SendWait("+^1");
             ////Thread.Sleep(1000);
@@ -154,10 +155,10 @@ namespace SimulateKeyPress
          */
         private void findTargetWindow()
         {
-            Console.WriteLine("findTargetWindow()");
+            Console.WriteLine("findTargetWindow(): " + _targetScreenPos);
 
-            System.Drawing.Point p = new Point(_targetScreenPos.X, _targetScreenPos.Y);
-            IntPtr windowAtPoint = WindowFromPoint(p);   //kind-fenster
+            _pointPointedAsWindow = new Point(_targetScreenPos.X, _targetScreenPos.Y);
+            IntPtr windowAtPoint = WindowFromPoint(_pointPointedAsWindow);   //kind-fenster
             IntPtr getAncestorWindowGetRoot = GetAncestor(windowAtPoint, GetAncestorFlags.GetRoot);
             IntPtr getAncestorWindowGetRootOwner = GetAncestor(windowAtPoint, GetAncestorFlags.GetRootOwner);
             string str = "getAncestorWindowGetRoot: " + getAncestorWindowGetRoot + "\n";
@@ -166,17 +167,40 @@ namespace SimulateKeyPress
             textBox1.Clear();
             textBox1.AppendText(str);
 
-            myHandle = getAncestorWindowGetRoot;
+            _myHandle = getAncestorWindowGetRoot;
 
-            if (myHandle == IntPtr.Zero)
+            if (_myHandle == IntPtr.Zero)
             {
                 MessageBox.Show("Target is not running.");
                 return;
             }
         }
 
+        private IntPtr findTargetWindow2()
+        {
+            Console.WriteLine("findTargetWindow2(): " + _pointPointedAsWindow);
+            int sourceX = _pickedScreen.Bounds.X + _pointPointedAsWindow.X;
+            int sourceY = _pickedScreen.Bounds.Y + _pointPointedAsWindow.Y;
+            IntPtr windowAtPoint = WindowFromPoint(new Point(sourceX, sourceY));   //kind-fenster
+            IntPtr getAncestorWindowGetRoot = GetAncestor(windowAtPoint, GetAncestorFlags.GetRoot);
+            IntPtr getAncestorWindowGetRootOwner = GetAncestor(windowAtPoint, GetAncestorFlags.GetRootOwner);
+            string str = "getAncestorWindowGetRoot: " + getAncestorWindowGetRoot + "\n";
+            str += "getAncestorWindowGetRootOwner: " + getAncestorWindowGetRootOwner + "\n";
+            str += "windowAtPoint: " + windowAtPoint + "\n";
+            textBox1.Clear();
+            textBox1.AppendText(str);
+            IntPtr handle = getAncestorWindowGetRoot;
+            //if (_myHandle == IntPtr.Zero)
+            //{
+            //    MessageBox.Show("Target is not running.");
+            //    return null;
+            //}
+            return handle;
+        }
 
-    private void InitializeComponent()
+
+
+        private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
             this.windowChosenButton = new System.Windows.Forms.Button();
@@ -381,12 +405,12 @@ namespace SimulateKeyPress
         {
             Console.WriteLine("findPageButton_Click");
             //shift+ctrl + 1 = drehen guz
-            SetForegroundWindow(myHandle);
+            SetForegroundWindow(_myHandle);
             SendKeys.SendWait("+^1");
             Thread.Sleep(1000);
 
             ////ctrl + L = vollbild
-            SetForegroundWindow(myHandle);
+            SetForegroundWindow(_myHandle);
             SendKeys.SendWait("^l");
             Thread.Sleep(1000);
 
@@ -486,8 +510,22 @@ namespace SimulateKeyPress
             findTargetWindow();
         }
 
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, UInt32 Msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowTextLength(HandleRef hWnd);
+        [DllImport("user32.dll", CharSet = CharSet.Auto)]
+        public static extern int GetWindowText(HandleRef hWnd, StringBuilder lpString, int nMaxCount);
+
+        const UInt32 WM_KEYDOWN = 0x0100;
+        const UInt32 WM_SYSKEYDOWN = 0x0104;
+        //const int VK_F5 = 0x74;
+        const int VK_NEXT = 0x22;
+
         private void doItButton_Click(object sender, EventArgs e)
         {
+            //VK_NEXT	0x22	Page Down
             Console.WriteLine("doItButton_Click");
 
             string tempPath = System.IO.Path.GetTempPath();
@@ -512,20 +550,23 @@ namespace SimulateKeyPress
             {
                 MessageBox.Show("Directory does not exist.");
                 return;
-            }
-            Rect WindowRect = new Rect();
-            GetWindowRect(myHandle, ref WindowRect);
-            Console.WriteLine("GetWindowRect delivers left: " + WindowRect.Left + " top: " + WindowRect.Top + " right: " + WindowRect.Right + " bottom: " + WindowRect.Bottom);
+            }             
+
+            //Rect WindowRect = new Rect();
+            //GetWindowRect(_myHandle, ref WindowRect);
+            //Console.WriteLine("GetWindowRect delivers left: " + WindowRect.Left + " top: " + WindowRect.Top + " right: " + WindowRect.Right + " bottom: " + WindowRect.Bottom);
 
             for ( int i = 0; i < numberOfShots; i++)
             {
                 doitagain:
-                if (myHandle == IntPtr.Zero)
+                
+                IntPtr handle = findTargetWindow2();
+                if (handle == IntPtr.Zero)
                 {
                     MessageBox.Show("Target is not running.");
                     return;
                 }
-                SetForegroundWindow(myHandle);
+                SetForegroundWindow(handle);                 
 
                 Console.WriteLine("_rectScaled: " + _rectScaled);
                 Console.WriteLine("_rectUnscaled: " + _rectUnscaled);
@@ -536,7 +577,7 @@ namespace SimulateKeyPress
                 int sourceX = _pickedScreen.Bounds.X + _rectScaled.X;
                 int sourceY = _pickedScreen.Bounds.Y + _rectScaled.Y;
                 captureGraphics.CopyFromScreen(sourceX, sourceY, 0, 0, _rectScaled.Size);      //oder screenshot vom ganzen und rectangle ausschneiden?
-
+                Console.WriteLine("sourceX: " + sourceX + " sourceY: " + sourceY + " _rectScaled.Size: " + _rectScaled.Size);
                 //captureBitmap.Save(@"C:\Users\user\Documents\Visual Studio 2015\Projects\handlesPdf\WindowsFormsApplication2\testShoots\schau.png", ImageFormat.Png);
 
                 string tempFileName = System.IO.Path.GetRandomFileName(); //tempFileName = "a4it1izv.xq5"
@@ -582,8 +623,17 @@ namespace SimulateKeyPress
                 Console.WriteLine("Moved " + tempSreenshotFile + " to " + realScreenshotPath); 
                 lastFilesName = realScreenshotPath;
                 now = ((DateTime.Now - new DateTime(1970, 1, 1)).TotalMilliseconds) / 1000;
-                SetForegroundWindow(myHandle);
+                
+                IntPtr handleTargetWindow = findTargetWindow2();
+                SetForegroundWindow(handleTargetWindow);
                 SendKeys.SendWait("{PGDN}");
+
+                //int capacity = GetWindowTextLength(new HandleRef(this, _myHandle)) * 2;
+                //StringBuilder stringBuilder = new StringBuilder(capacity);
+                //GetWindowText(new HandleRef(this, _myHandle), stringBuilder, stringBuilder.Capacity);
+                //Console.WriteLine("window-title: " + stringBuilder);
+                //PostMessage(_myHandle, WM_KEYDOWN, VK_NEXT, 0);
+
                 Thread.Sleep(MillisecondsSleep);                
             }  //endfor
             if (checkBoxPdf.Checked)

@@ -16,49 +16,63 @@ namespace Snipping_OCR
     {
         public Rectangle rectScaled { get; }
         public Rectangle rectUnscaled { get; }
-        //public int screenNumber { get; }
+        public Screen _choosenScreen { get; }
 
-        public RectangleEventArgs(Rectangle rectScaled, Rectangle rectUnscaled/*, int screenNumber*/)
+        public RectangleEventArgs(Rectangle rectScaled, Rectangle rectUnscaled, Screen screen)
         {
             this.rectScaled = rectScaled;
             this.rectUnscaled = rectUnscaled;
-            //this.screenNumber = screenNumber;
+            this._choosenScreen = screen;
         }
     }
 
-    public class ChooseAreaToolFac
-    {
-        public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, bool searchAuto, Color background, Point locationOfPickedBackground)
-        {
-            if (searchAuto)
-            {
-                Console.WriteLine("returning ChooseAreaToolAutomatic");
-                return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height/*, screenNumber*/, background, locationOfPickedBackground);
-            } else
-            {
-                Console.WriteLine("returning ChooseAreaTool");
-                return new ChooseAreaTool(desktopScreenShot, x, y, width, height/*, screenNumber*/);
-            }
-        }
-    }
+    //public class ChooseAreaToolFac
+    //{
+    //    public static ChooseAreaTool get(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, bool searchAuto, Color background, Point locationOfPickedBackground)
+    //    {
+
+    //        return new ChooseAreaToolAutomatic(desktopScreenShot, x, y, width, height/*, screenNumber*/, background, locationOfPickedBackground);
+    //        //if (searchAuto)
+    //        //{
+    //        //    Console.WriteLine("returning ChooseAreaToolAutomatic");
+
+    //        //} else
+    //        //{
+    //        //    Console.WriteLine("returning ChooseAreaTool");
+    //        //    return new ChooseAreaTool(desktopScreenShot, x, y, width, height/*, screenNumber*/);
+    //        //} 
+    //    }
+    //}
 
     public partial class ChooseAreaTool : Form
     {
         public delegate void EventHandler(object Sender, EventArgs e);       
         public event EventHandler AreaSelected;       
        
+        /// <summary>
+        /// This is not in screen-coordinates.
+        /// </summary>
         protected Rectangle _rectSelection;
+       
+        /// <summary>
+        /// From this you may get the coordinates of the chosen window.
+        /// </summary>
+        public Rectangle _rectSelectionScreenCoordinates { get; set; }
+
+
         protected Boolean _rectSelectionIsPreset;
         private Point _pointStart;
-        //private int myScreenNumber;
-        protected Image _deskTopScreenShot;
         
-        public ChooseAreaTool(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/)
+        protected Image _deskTopScreenShot;
+
+        public Screen _myScreen { get; set; }
+
+        public ChooseAreaTool(Image desktopScreenShot, int x, int y, int width, int height, Screen screen)
         {
             Console.WriteLine("ChooseAreaTool x=" + x + "y=" + y + "width=" + width + "height=" + height + " " + _rectSelection);
 
-            InitializeComponent();            
-            //myScreenNumber = screenNumber;
+            InitializeComponent();
+            _myScreen = screen;                     
             BackgroundImage = desktopScreenShot;
             _deskTopScreenShot = desktopScreenShot;
             BackgroundImageLayout = ImageLayout.Stretch;
@@ -108,9 +122,18 @@ namespace Snipping_OCR
         }
 
         protected override void OnMouseUp(MouseEventArgs e)
-        {
-            Console.WriteLine("ChooseAreaTool.OnMouseUp(): " + _rectSelection);
-            
+        {   
+            _rectSelectionScreenCoordinates = new Rectangle(
+                _rectSelection.X + _myScreen.Bounds.Left,
+                _rectSelection.Y + _myScreen.Bounds.Top,
+                _rectSelection.Width,
+                _rectSelection.Height);
+
+            //Wrong coordinates from event screen 2 left of screen 1 has negative x in windows.
+            Console.WriteLine("ChooseAreaTool.OnMouseUp() at : " + e.Location + 
+                " _rectSelection: " + _rectSelection + 
+                " _rectSelectionScreenCoordinates: " + _rectSelectionScreenCoordinates);
+
             Invalidate();
             Done();
         }
@@ -133,7 +156,7 @@ namespace Snipping_OCR
             Rectangle rectUnScaled = new Rectangle(_rectSelection.X, _rectSelection.Y, _rectSelection.Width, _rectSelection.Height);            
 
             //NULL-Bedingungsoperator https://msdn.microsoft.com/de-de/library/dn986595.aspx
-            AreaSelected?.Invoke(this, new RectangleEventArgs(rectScaled, rectUnScaled/*, myScreenNumber*/));
+            AreaSelected?.Invoke(this, new RectangleEventArgs(rectScaled, rectUnScaled, _myScreen));
         }
 
         protected Rectangle ScaleRectSelection()
@@ -193,7 +216,7 @@ namespace Snipping_OCR
         protected virtual void HandlesForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Console.WriteLine("HandlesForm_FormClosing");
-        }
+        }        
     }
 
     /// <summary>
@@ -321,8 +344,8 @@ namespace Snipping_OCR
         private Color _background;
         private Point _locationOfBackground;
 
-        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, Color background, Point locationOfBackground) :
-            base (desktopScreenShot, x, y, width, height/*, screenNumber*/)
+        public ChooseAreaToolAutomatic(Image desktopScreenShot, int x, int y, int width, int height/*, int screenNumber*/, Color background, Point locationOfBackground, Screen screen) :
+            base (desktopScreenShot, x, y, width, height, screen)
         {
             Console.WriteLine("ChooseAreaToolAutomatic");
             _background = background;

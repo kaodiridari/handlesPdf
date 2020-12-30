@@ -24,7 +24,7 @@ namespace SimulateKeyPress
         Rectangle _rectUnscaled;
         private Button doItButton;
         //const string filePath = @"C:\Users\user\temp\";
-        private const int SecondsTimeout = 60;
+        private const int SecondsTimeout = 600;
         private const int MillisecondsSleep = 250;
         private Label label1;
         private TextBox numberOfPages;
@@ -198,8 +198,6 @@ namespace SimulateKeyPress
             return handle;
         }
 
-
-
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
@@ -364,6 +362,7 @@ namespace SimulateKeyPress
             GetCursorPos(out _targetScreenPos);
             GetColorAt(_targetScreenPos);
             textBox1.AppendText("MyOnMouseUp _targetScreenPos: " + _targetScreenPos.X + ", " + _targetScreenPos.Y + " color at point: "  + _pickedColor.ToString() + "\n\n");
+            Console.WriteLine("PickBackgroundColor() _targetScreenPos: " + _targetScreenPos.X + ", " + _targetScreenPos.Y);
 
             Screen[] screens = Screen.AllScreens;
             Rectangle pos = new Rectangle(_targetScreenPos.X, _targetScreenPos.Y, 1, 1);
@@ -424,7 +423,7 @@ namespace SimulateKeyPress
             //public static void Snip()
             //{
             Console.WriteLine("findPage(bool autoSearch" + _autoSearch);
-            List<DeviceInfo> screens = ScreenHelper.GetMonitorsInfo();
+            //List<DeviceInfo> screens = ScreenHelper.GetMonitorsInfo();
 
             // We allready know the screen, the area ...
             if (_autoSearch)
@@ -442,29 +441,36 @@ namespace SimulateKeyPress
                 //bmp.Save(@"C:\Users\user\Documents\Visual Studio 2015\Projects\handlesPdf\WindowsFormsApplication2\testShoots\screenshot.png", ImageFormat.Png);
                 Console.WriteLine("Got screenshot.");
                 _formsForScreens = new ChooseAreaTool[1];
-                _formsForScreens[0] = ChooseAreaToolFac.get(bmp, left, top, hRes, vRes, _autoSearch, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
+                //ChooseAreaToolFac.get(bmp, left, top, hRes, vRes, _autoSearch, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
+                _formsForScreens[0] = new ChooseAreaToolAutomatic(bmp, left, top, hRes, vRes, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y), _pickedScreen);
                 _formsForScreens[0].AreaSelected += OnAreaSelected;
                 _formsForScreens[0].Show();
                 _formsForScreens[0].start();
             }
             else
             {
-                _formsForScreens = new ChooseAreaTool[screens.Count];
-                for (int i = 0; i < screens.Count; i++)
+                Screen[] screens = Screen.AllScreens;
+                _formsForScreens = new ChooseAreaTool[screens.Count()];
+                for (int i = 0; i < screens.Count(); i++)
                 {
                     Console.WriteLine("findPage handling screen " + i);
-                    int hRes = screens[i].HorizontalResolution;
-                    int vRes = screens[i].VerticalResolution;
-                    int top = screens[i].MonitorArea.Top;
-                    int left = screens[i].MonitorArea.Left;
+                    int hRes = screens[i].Bounds.Width; // HorizontalResolution;
+                    int vRes = screens[i].Bounds.Height; // VerticalResolution;
+                    int top = screens[i].Bounds.Top; // MonitorArea.Top;
+                    int left = screens[i].Bounds.Left; // MonitorArea.Left;
+
+                    Console.WriteLine(i + ". screen top: " + top + " left: " + left);
+
                     var bmp = new Bitmap(hRes, vRes, PixelFormat.Format32bppPArgb);
                     //ganzer Bildschirm als Hintergrund
                     using (var g = Graphics.FromImage(bmp))
                     {
                         g.CopyFromScreen(left, top, 0, 0, bmp.Size);
                     }
-                    _formsForScreens[i] = ChooseAreaToolFac.get(bmp, left, top, hRes, vRes/*, i*/, _autoSearch, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
+                    _formsForScreens[i] = new ChooseAreaTool(bmp, left, top, hRes, vRes, screens[i]);
+                   // _formsForScreens[i] = ChooseAreaToolFac.get(bmp, left, top, hRes, vRes/*, i*/, _autoSearch, _pickedColor, new Point(_targetScreenPos.X, _targetScreenPos.Y));
                     _formsForScreens[i].AreaSelected += OnAreaSelected;
+                    //_formsForScreens[i].SetScreen(screens[i]);
                     _formsForScreens[i].Show();
                     _formsForScreens[i].start();
                 }
@@ -477,6 +483,12 @@ namespace SimulateKeyPress
             RectangleEventArgs rea = (RectangleEventArgs)e;
             this._rectScaled = rea.rectScaled;
             this._rectUnscaled = rea.rectUnscaled;
+            Screen[] screens = Screen.AllScreens;
+            foreach (Screen s in Screen.AllScreens) {
+                if (s.DeviceName.Equals(rea._choosenScreen.DeviceName)) {
+                    this._pickedScreen = s;
+                 }
+            }
             //int sn = rea.screenNumber;
             textBox1.AppendText("Rectangle scaled: " + _rectScaled.ToString() + " Rectangle unscaled: " + _rectUnscaled.ToString() + "\r\n");
             textBox1.AppendText(" Upper left x: " + rea.rectScaled.X.ToString() + " Upper left y: " + rea.rectScaled.Y.ToString());

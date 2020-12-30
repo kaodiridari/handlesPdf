@@ -280,7 +280,7 @@ namespace SimulateKeyPress
             this.findPageButton.Name = "findPageButton";
             this.findPageButton.Size = new System.Drawing.Size(215, 34);
             this.findPageButton.TabIndex = 6;
-            this.findPageButton.Text = "Auto-Choose snipping region";
+            this.findPageButton.Text = "Choose snipping region manually";
             this.findPageButton.UseVisualStyleBackColor = true;
             this.findPageButton.Click += new System.EventHandler(this.findPageButton_Click);
             // 
